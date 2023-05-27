@@ -1,0 +1,115 @@
+import CsvTable from "./CsvTable";
+import ScatterPlotExample from "./ScatterPlotExample";
+import {RangesModelTable} from "./RangesModelTable";
+import {RangesModelVisualisation} from "./RangesModelVisualisation";
+import {SplineModelVisualisation} from "./SplineModelVisualisation";
+import {LinearRelationshipModelVisualisation} from "./LinearRelationshipModelVisualisation";
+import {MSEAndMAEVisualisation} from "./MSEandMAEVisualisation";
+import {GradientUpdateVisualisation} from "./GradientUpdateVisualisation";
+import {GradientDescentAnimatedVisualisation} from "./GradientDescentAnimatedVisualisation";
+
+export const Thing = () => <>World</>
+
+# Linear regression, from scratch
+
+## Motivation
+<CsvTable/>
+
+Suppose we've obtained the above dataset of house prices. A reasonable assumption would be that price increases as does the area.
+In the plot below, we can see that such relationship exists, and that area has a rather strong effect on price.
+
+<ScatterPlotExample/>
+
+Motivated by this, we'd like to create a black box - a model - that will tell you the price, given the area.
+Naturally this model can't be completely correct, because other factors also affect the price, such as location.
+But wouldn't a reasonable estimate still be useful?
+
+## Modelling the relationship
+### Range model
+There are many ways to build such model.
+One natural idea is to simply yield the range of possible values for a given area range.
+
+<RangesModelTable/>
+
+That is, once we know the area, we know the ballpark of the price, visualised below.
+
+<RangesModelVisualisation/>
+
+### Spline model
+
+The above model only us a range though! What if we want a single value?
+One approach could be to compute the average of each range. Then if somebody asks us
+what price we should expect, we could reply with the average of the corresponding range.
+Or better yet we could connect the averages using lines to interpolate between them!
+
+<SplineModelVisualisation/>
+
+### Linear relationship model
+But thats too complex! And how would we extrapolate the line towards the right, where there are no data?
+Furthermore, the curviness of the line may not really justified by the data, maybe its just noise.
+
+So how about we simply fit some line $y = ax +b$ to the data?
+
+<LinearRelationshipModelVisualisation/>
+
+
+... but which one?
+
+### Minimizing the error
+
+To help us choose, we should first realize that no line that we draw will perfectly fit the data.
+But line whose separation from the points is smaller than another is clearly better.
+Hence to find a line, we could simply quantize this separation, and find the line with the smallest separation.
+
+The most natural way to quantify the separation is to use the distance between the line and the point.
+
+$\text{MAE} = \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i|$
+
+where:
+- $n$ is the number of observations,
+- $y_i$ is the observed value for the $i$th observation,
+- $\hat{y}_i$ is the predicted value for the $i$th observation, and
+- $|\cdot|$ denotes the absolute value.
+
+This is called the mean absolute error (MAE).
+But it is far from the only way to quantify the separation.
+One alternative for example is the mean squared error (MSE), which is defined as:
+
+$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$
+
+These two have been visualised below. You can try to generate a random line and see the error for yourself.
+The darker the line, the more it contributes to the total error. In both cases
+the resulting error is similar, but that MSE tends to penalize outliers more.
+Note that we actually show the value for $\sqrt{\text{MSE}}$, so that it is comparable to MAE
+
+
+<MSEAndMAEVisualisation/>
+
+<br/>
+<br/>
+### Minimizing the MSE
+
+Typically the MSE is minimized, because it behaves better than the MAE.
+To minimize the MSE we first compute the first derivative with respect to $\hat{y_i}$
+
+$\frac{\partial}{\partial y_i} \text{MSE} = \frac{\partial}{\partial y_i}\sum_{i=0}^{i=n}(\hat{y_i}-y_i)^2 = \frac{\partial}{\partial y_i}2\sum_{i=0}^{i=n}(\hat{y_i}-y_i) \cdot \hat{y_i}$
+
+and then substitute $\hat{y_i} = ax_i + b$ to get
+
+$\frac{\partial}{\partial y_i} \text{MSE} = \frac{\partial}{\partial y_i}2\sum_{i=0}^{i=n}(ax_i + b - y_i) \cdot (ax_i + b) = 2\sum_{i=0}^{i=n}(ax_i + b - y_i) \cdot x_i$
+
+Finally to find the minimum, we can use gradient descent. Which means, in human speak "go downward" and in quasi-human-speak "go in the direction of the negative derivative".
+
+
+<GradientUpdateVisualisation/>
+
+All we have to do now is repeat this process until we reach a minimum. This is called gradient descent.
+
+<GradientDescentAnimatedVisualisation/>
+
+
+
+
+
+
+
